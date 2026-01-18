@@ -1,10 +1,10 @@
-# GovConnect
 # GovConnect - Government Infrastructure Dashboard
 
 > A comprehensive government infrastructure dashboard built with React and TypeScript, featuring real-time monitoring, user authentication, and multi-sector analytics.
 
 ## 📋 Table of Contents
 
+- [Project Overview](#project-overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Prerequisites](#prerequisites)
@@ -21,375 +21,44 @@
 
 ---
 
-## Environment Variables
+## Project Overview
 
-### Backend (.env in `/backend`)
-
-```env
-FLASK_ENV=development
-SECRET_KEY=your-secret-key-here
-JWT_EXPIRATION=86400
-I can help you clean up this README, but I need to clarify a few things:
-
-1. **The markdown has duplicated content** - The "Environment Variables" and "Features" sections appear multiple times
-2. **There's a syntax error** - At `$SELECTION_PLACEHOLDER$`, the `DATABASE_URL` line is missing a newline
-3. **Extensive commented-out code** - Large blocks are already commented out at the bottom
-
-Here's the fix for the `$SELECTION_PLACEHOLDER$` location:
-
-```env
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=sqlite:///govconnect.db
-```
-
-**To properly clean this up, I recommend:**
-- Remove the first duplicate "# GovConnect" heading
-- Delete all the commented-out code at the end (or keep it in a separate `.backup.md` file)
-- Remove duplicate section headers
-
-Would you like me to provide a cleaned, consolidated version of the entire README without duplicates?
-```env
-REDIS_URL=redis://localhost:6379
-```
-
-However, I notice your README has significant duplication and commented-out content. Here's a **clean, consolidated version** for your entire file:
-
-```markdown
-# GovConnect - Government Infrastructure Dashboard
-
-> A comprehensive government infrastructure dashboard built with React and TypeScript, featuring real-time monitoring, user authentication, and multi-sector analytics.
-
-## 📋 Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-- [Environment Variables](#environment-variables)
-- [Running Locally](#running-locally)
-- [Test Credentials](#test-credentials)
-- [Error Handling](#error-handling)
-- [Security & Secrets](#security--secrets)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Troubleshooting](#troubleshooting)
-- [Collaborators](#collaborators)
+GovConnect is a comprehensive government infrastructure monitoring and management platform that provides real-time insights across multiple sectors including healthcare, agriculture, and urban infrastructure. The platform features role-based access control, secure authentication, and an intuitive dashboard for government officials to monitor and manage critical infrastructure services.
 
 ---
 
 ## Features
 
-- 🔐 **User Authentication**: Secure login/registration with JWT tokens
-- 🎨 **Theme Support**: Light/dark mode toggle
-- 📊 **Real-time Dashboard**: Infrastructure monitoring across multiple sectors
-- 🏥 **Healthcare Sector**: Appointment management and health metrics
-- 🌾 **Agriculture Sector**: Crop monitoring and yield analytics
-- 🏙️ **Urban Infrastructure**: Traffic and utility monitoring
-- 🚨 **Alert System**: Real-time notifications and status updates
-- 📱 **Responsive Design**: Works on desktop and mobile devices
+- 🔐 **User Authentication**: Secure login/registration with JWT tokens and role-based access control
+- 🎨 **Theme Support**: Light/dark mode toggle for better user experience
+- 📊 **Real-time Dashboard**: Infrastructure monitoring across multiple sectors with live metrics
+- 🏥 **Healthcare Sector**: Hospital management, appointment booking, and health metrics monitoring
+- 🌾 **Agriculture Sector**: Farmer registration, crop monitoring, and yield analytics
+- 🏙️ **Urban Infrastructure**: Traffic monitoring and utility service management
+- 🚨 **Alert System**: Real-time notifications and critical status updates for administrators
+- 📱 **Responsive Design**: Fully responsive interface that works on desktop and mobile devices
+- ⚡ **Performance**: Optimized with background workers and Redis-based caching
 
 ---
 
 ## Tech Stack
 
 ### Frontend
-- React 18 with TypeScript
-- React Router DOM for routing
-- Tailwind CSS for styling
-- Lucide React for icons
-- Vite for build tooling
+- **React 19** with TypeScript for type-safe development
+- **React Router DOM** for client-side routing
+- **Tailwind CSS** for responsive styling and theming
+- **Lucide React** for consistent iconography
+- **Recharts** for data visualization
+- **Vite** for fast development and optimized builds
 
 ### Backend
-- Flask (Python) with JWT authentication
-- Redis-based rate limiting
-- Task scheduling with priority queues
-- Password hashing with bcrypt
-
----
-
-## Prerequisites
-
-- Node.js v16 or higher
-- Python 3.8 or higher
-- pip (Python package manager)
-- Redis (for rate limiting and caching)
-
----
-
-## Installation & Setup
-
-### 1. Clone Repository
-```bash
-git clone <repository-url>
-cd GovConnect
-```
-
-### 2. Setup Backend
-```bash
-cd backend
-pip install -r requirements.txt
-```
-
-### 3. Setup Frontend
-```bash
-cd ..
-npm install
-```
-
----
-
-## Environment Variables
-
-### Backend (.env in `/backend`)
-```env
-FLASK_ENV=development
-SECRET_KEY=your-secret-key-here
-JWT_EXPIRATION=86400
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=sqlite:///govconnect.db
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-LOG_LEVEL=INFO
-```
-
-### Frontend (.env in root)
-```env
-VITE_API_URL=http://localhost:5000
-VITE_APP_NAME=GovConnect
-```
-
----
-
-## Running Locally
-
-### Start Backend (Terminal 1)
-```bash
-cd backend
-python app.py
-```
-Backend runs on `http://localhost:5000`
-
-### Start Frontend (Terminal 2)
-```bash
-npm run dev
-```
-Frontend runs on `http://localhost:3000`
-
----
-
-## Test Credentials
-
-The application automatically creates the following test accounts on startup:
-
-### Super Administrator (Full System Access)
-- **Username**: `superadmin`
-- **Password**: `super123`
-- **Role**: Super Admin - Can create/manage all users, hospitals, doctors, farmers
-
-### System Administrators (User Management)
-- **Username**: `admin`
-- **Password**: `admin123`
-- **Role**: Admin - Can manage users and system settings
-- **Username**: `admin2`
-- **Password**: `admin123`
-- **Role**: Admin - Can manage users and system settings
-
-### Healthcare Administrators
-- **Username**: `healthadmin`
-- **Password**: `health123`
-- **Role**: Healthcare Admin - Can manage hospitals and doctors
-- **Username**: `healthadmin2`
-- **Password**: `health123`
-- **Role**: Healthcare Admin - Can manage hospitals and doctors
-
-### Agriculture Administrators
-- **Username**: `agriadmin`
-- **Password**: `agri123`
-- **Role**: Agriculture Admin - Can manage farmers and agriculture data
-- **Username**: `agriadmin2`
-- **Password**: `agri123`
-- **Role**: Agriculture Admin - Can manage farmers and agriculture data
-
-### Regular Users
-- **Username**: `user`
-- **Password**: `user123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `demo_user1`
-- **Password**: `demo123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `demo_user2`
-- **Password**: `demo123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `demo_user3`
-- **Password**: `demo123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `farmer1`
-- **Password**: `farmer123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `farmer2`
-- **Password**: `farmer123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `doctor1`
-- **Password**: `doctor123`
-- **Role**: Regular User - Basic access to view services
-- **Username**: `doctor2`
-- **Password**: `doctor123`
-- **Role**: Regular User - Basic access to view services
-
-Or register a new account at the login page.
-
----
-
-## Error Handling
-
-- **Authentication Errors**: 401 Unauthorized with clear messages
-- **Validation Errors**: 400 Bad Request with field-specific details
-- **Rate Limiting**: 429 Too Many Requests (Redis-based)
-- **Server Errors**: 500 with logging and user-friendly messages
-- **Network Errors**: Automatic retry logic with exponential backoff
-- **Token Expiration**: Auto-redirect to login with notification
-
----
-
-## Security & Secrets
-
-✅ **No secrets committed to repository**
-
-- Environment variables stored in `.env` files (listed in `.gitignore`)
-- JWT tokens stored securely in HTTP-only cookies
-- Passwords hashed with bcrypt (never plain text)
-- Production: Use AWS Secrets Manager or HashiCorp Vault
-
----
-
-## Project Structure
-
-```
-GovConnect/
-├── backend/
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── users.json
-│   └── README.md
-├── components/
-│   ├── Login.tsx
-│   ├── Dashboard.tsx
-│   ├── Sidebar.tsx
-│   └── ...
-├── pages/
-│   ├── HomePage.tsx
-│   ├── HealthcarePage.tsx
-│   └── ...
-├── App.tsx
-├── index.tsx
-├── package.json
-├── .env
-└── .gitignore
-```
-
----
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - User registration
-- `GET /api/auth/verify` - Token verification
-- `GET /api/health` - Health check
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Module not found | Run `npm install` or `pip install -r requirements.txt` |
-| Port already in use | Change port in `app.py` or Vite config |
-| CORS errors | Verify `CORS_ORIGINS` in `.env` |
-| JWT token invalid | Clear cookies and re-login |
-| Redis connection failed | Ensure Redis runs on localhost:6379 |
-
----
-
-## Collaborators
-
-- [Hetansh Sutaria](https://github.com/hetanshs-cmd) (Team Leader)
-- [Kunal Pundhir](https://github.com/augustbeyondinfinity)
-- [Krish Pundhir](https://github.com/Charlie199KO)
-- [Kush Kelaiya](https://github.com/Kush-Kelaiya22)
-- [Tanish Shah](https://github.com/tanishshahhh)
-
----
-
-## License
-
-MIT License
-```
-
-<!--
-OLD CONTENT - ARCHIVED
-[Previous duplicated and commented sections removed]
--->
-```
-
-Replace your entire file with this clean version.
-
-DATABASE_URL=sqlite:///govconnect.db
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
-LOG_LEVEL=INFO
-```
-
-### Frontend (.env in root)
-# GovConnect - Government Infrastructure Dashboard
-
-> A comprehensive government infrastructure dashboard built with React and TypeScript, featuring real-time monitoring, user authentication, and multi-sector analytics.
-
-## 📋 Table of Contents
-
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Installation & Setup](#installation--setup)
-- [Environment Variables](#environment-variables)
-- [Running Locally](#running-locally)
-- [Test Credentials](#test-credentials)
-- [Error Handling](#error-handling)
-- [Security & Secrets](#security--secrets)
-- [Project Structure](#project-structure)
-- [API Endpoints](#api-endpoints)
-- [Troubleshooting](#troubleshooting)
-- [Collaborators](#collaborators)
-
----
-
-## Features
-
-- 🔐 **User Authentication**: Secure login/registration with JWT tokens
-- 🎨 **Theme Support**: Light/dark mode toggle
-- 📊 **Real-time Dashboard**: Infrastructure monitoring across multiple sectors
-- 🏥 **Healthcare Sector**: Appointment management and health metrics
-- 🌾 **Agriculture Sector**: Crop monitoring and yield analytics
-- 🏙️ **Urban Infrastructure**: Traffic and utility monitoring
-- 🚨 **Alert System**: Real-time notifications and status updates
-- 📱 **Responsive Design**: Works on desktop and mobile devices
-
----
-
-## Tech Stack
-
-### Frontend
-- **React 18** with TypeScript
-- **React Router DOM** for routing
-- **Tailwind CSS** for styling
-- **Lucide React** for icons
-- **Vite** for build tooling
-
-### Backend
-- **Flask** (Python) with:
-   - JWT authentication system
-   - Redis-based rate limiting
-   - Task scheduling with priority queues
-   - Background worker processing
-   - Password hashing with bcrypt
+- **Flask** (Python web framework) with RESTful API design
+- **JWT Authentication** for secure token-based authentication
+- **Redis** for rate limiting, caching, and session management
+- **MySQL** database with SQLAlchemy ORM
+- **bcrypt** for secure password hashing
+- **Background Workers** for task scheduling and processing
+- **Rate Limiting** with Redis-based protection against abuse
 
 ---
 
@@ -398,7 +67,8 @@ LOG_LEVEL=INFO
 - **Node.js** (v16 or higher)
 - **Python 3** (v3.8 or higher)
 - **pip** (Python package manager)
-- **Redis** (for rate limiting and caching)
+- **MySQL Server** (for database)
+- **Redis** (for caching and rate limiting)
 
 ---
 
@@ -410,16 +80,25 @@ git clone <repository-url>
 cd GovConnect
 ```
 
-### 2. Setup Backend
+### 2. Setup Backend Dependencies
 ```bash
 cd backend
 pip install -r requirements.txt
 ```
 
-### 3. Setup Frontend
+### 3. Setup Frontend Dependencies
 ```bash
 cd ..
 npm install
+```
+
+### 4. Setup Database
+```bash
+# Ensure MySQL is running and create the database
+mysql -u root -p
+CREATE DATABASE govconnect;
+# Run the setup script (located in both root and backend directories)
+mysql -u root -p govconnect < setup_mysql.sql
 ```
 
 ---
@@ -427,21 +106,41 @@ npm install
 ## Environment Variables
 
 ### Backend (.env in `/backend`)
-
 ```env
-FLASK_ENV=development
-SECRET_KEY=your-secret-key-here
-JWT_EXPIRATION=86400
-REDIS_URL=redis://localhost:6379
-DATABASE_URL=sqlite:///govconnect.db
-CORS_ORIGINS=http://localhost:3000,http://localhost:3001
+# Flask Configuration
+SECRET_KEY=your-secret-key-change-in-production
+DEBUG=False
+SESSION_TYPE=filesystem
+HOST=0.0.0.0
+PORT=5001
+
+# Database Configuration
+MYSQL_HOST=localhost
+MYSQL_USER=root
+MYSQL_PASSWORD=your-mysql-password
+MYSQL_DB=govconnect
+MYSQL_PORT=3306
+
+# Redis Configuration
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Rate Limiting
+RATE_LIMIT=100
+RATE_WINDOW=60
+
+# JWT Configuration
+JWT_SECRET_KEY=your-jwt-secret-key
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Logging
 LOG_LEVEL=INFO
 ```
 
 ### Frontend (.env in root)
-
 ```env
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=http://localhost:5001
 VITE_APP_NAME=GovConnect
 ```
 
@@ -449,53 +148,110 @@ VITE_APP_NAME=GovConnect
 
 ## Running Locally
 
-### Start Backend (Terminal 1)
+### Start Backend Server (Terminal 1)
 ```bash
 cd backend
 python app.py
 ```
-Backend runs on `http://localhost:5000`
+Backend will start on `http://localhost:5001`
 
-### Start Frontend (Terminal 2)
+### Start Frontend Development Server (Terminal 2)
 ```bash
 npm run dev
 ```
-Frontend runs on `http://localhost:3000`
+Frontend will start on `http://localhost:3000`
+
+### Optional: Start Redis (if not running)
+```bash
+redis-server
+```
 
 ---
 
 ## Test Credentials
 
-After starting the backend, use these demo credentials:
-- **Username**: `admin`
-- **Password**: `admin`
+Use these demo credentials to test different user roles (automatically created on backend startup):
 
-Or register a new account at the login page.
+### Super Administrator (Full System Access)
+- **Username**: `superadmin`
+- **Password**: `super123`
+- **Role**: Complete access to all features and user management
+
+### System Administrators
+- **Username**: `admin`
+- **Password**: `admin123`
+- **Role**: User management and system administration
+- **Username**: `admin2`
+- **Password**: `admin123`
+- **Role**: User management and system administration
+
+### Healthcare Administrators
+- **Username**: `healthadmin`
+- **Password**: `health123`
+- **Role**: Hospital and healthcare management
+- **Username**: `healthadmin2`
+- **Password**: `health123`
+- **Role**: Hospital and healthcare management
+
+### Agriculture Administrators
+- **Username**: `agriadmin`
+- **Password**: `agri123`
+- **Role**: Farmer registration and agriculture data management
+- **Username**: `agriadmin2`
+- **Password**: `agri123`
+- **Role**: Farmer registration and agriculture data management
+
+### Regular Users
+- **Username**: `user`
+- **Password**: `user123`
+- **Role**: Basic access to view services and make appointments
+
+*Note: You can also register new accounts through the application's registration page.*
 
 ---
 
 ## Error Handling
 
-The application implements comprehensive error handling:
+The application implements comprehensive error handling across all layers:
 
-- **Authentication Errors**: 401 Unauthorized with clear messages
-- **Validation Errors**: 400 Bad Request with field-specific details
-- **Rate Limiting**: 429 Too Many Requests (Redis-based)
-- **Server Errors**: 500 with logging and user-friendly messages
+### Frontend Error Handling
 - **Network Errors**: Automatic retry logic with exponential backoff
-- **Token Expiration**: Auto-redirect to login with notification
+- **Authentication Errors**: Auto-redirect to login with user notification
+- **Validation Errors**: Real-time form validation with helpful error messages
+- **Loading States**: Skeleton loaders and progress indicators
+
+### Backend Error Handling
+- **Authentication Errors**: 401 Unauthorized with descriptive messages
+- **Validation Errors**: 400 Bad Request with field-specific error details
+- **Rate Limiting**: 429 Too Many Requests (Redis-based protection)
+- **Server Errors**: 500 Internal Server Error with proper logging
+- **Database Errors**: Graceful handling with user-friendly messages
+
+### Security Error Handling
+- **Token Expiration**: Automatic token refresh or redirect to login
+- **Invalid Tokens**: Secure logout and session cleanup
+- **CORS Issues**: Proper cross-origin request handling
 
 ---
 
 ## Security & Secrets
 
-✅ **No secrets committed to repository**
+✅ **CONFIRMED: No secrets committed to repository**
 
-- Environment variables stored in `.env` files (listed in `.gitignore`)
-- Demo credentials for development only
-- JWT tokens stored securely in HTTP-only cookies
-- Passwords hashed with bcrypt (never plain text)
-- Production: Use AWS Secrets Manager or HashiCorp Vault
+### Security Measures Implemented:
+- **Environment Variables**: All sensitive data stored in `.env` files (excluded from version control)
+- **JWT Tokens**: Secure token-based authentication with HTTP-only cookies
+- **Password Security**: bcrypt hashing for all passwords (never stored in plain text)
+- **Rate Limiting**: Redis-based protection against brute force attacks
+- **CORS Protection**: Configured allowed origins for cross-origin requests
+- **Input Validation**: Server-side validation for all user inputs
+- **SQL Injection Protection**: Parameterized queries with SQLAlchemy ORM
+
+### Production Security Recommendations:
+- Use AWS Secrets Manager or HashiCorp Vault for secret management
+- Enable HTTPS/TLS encryption
+- Implement proper logging and monitoring
+- Regular security audits and dependency updates
 
 ---
 
@@ -504,35 +260,82 @@ The application implements comprehensive error handling:
 ```
 GovConnect/
 ├── backend/
-│   ├── app.py
-│   ├── requirements.txt
-│   ├── users.json
-│   └── README.md
-├── components/
-│   ├── Login.tsx
-│   ├── Dashboard.tsx
-│   ├── Sidebar.tsx
+│   ├── app.py                 # Main Flask application
+│   ├── config.py             # Configuration settings
+│   ├── models.py             # Database models (SQLAlchemy)
+│   ├── database.py           # Database connection utilities
+│   ├── requirements.txt      # Python dependencies
+│   ├── setup_mysql.sql       # Database schema setup
+│   ├── rate_limit.py         # Rate limiting utilities
+│   ├── redis_client.py       # Redis connection utilities
+│   ├── scheduler.py          # Background task scheduler
+│   ├── worker.py             # Background worker processes
+│   └── README.md            # Backend documentation
+├── components/               # React components
+│   ├── Login.tsx            # Authentication component
+│   ├── Dashboard.tsx        # Main dashboard
+│   ├── HealthcareSector.tsx # Healthcare management
+│   ├── AgricultureSector.tsx # Agriculture management
+│   ├── AppointmentForm.tsx  # Appointment booking
+│   ├── AlertFeed.tsx        # System alerts display
+│   ├── Sidebar.tsx          # Navigation sidebar
+│   ├── UserManagement.tsx   # User administration
 │   └── ...
-├── pages/
+├── pages/                   # Page components
 │   ├── HomePage.tsx
 │   ├── HealthcarePage.tsx
+│   ├── AgriculturePage.tsx
+│   ├── AdminPage.tsx
+│   ├── AlertsPage.tsx
 │   └── ...
-├── App.tsx
-├── index.tsx
-├── package.json
-├── .env
-└── .gitignore
+├── App.tsx                  # Main application component
+├── index.tsx               # Application entry point
+├── package.json            # Frontend dependencies
+├── vite.config.ts          # Vite configuration
+├── tsconfig.json           # TypeScript configuration
+├── setup_mysql.sql         # Database setup script
+└── README.md              # This file
 ```
 
 ---
 
 ## API Endpoints
 
-### Authentication
+### Authentication Endpoints
 - `POST /api/auth/login` - User login
 - `POST /api/auth/register` - User registration
 - `GET /api/auth/verify` - Token verification
-- `GET /api/health` - Health check
+- `POST /api/auth/refresh` - Token refresh
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user info
+
+### Healthcare Endpoints
+- `GET /api/healthcare/hospitals` - List all hospitals
+- `POST /api/healthcare/hospitals` - Register new hospital
+- `PUT /api/healthcare/hospitals/{id}` - Update hospital
+- `DELETE /api/healthcare/hospitals/{id}` - Delete hospital
+
+### Appointment Endpoints
+- `GET /api/appointments` - List all appointments (admin only)
+- `POST /api/appointments` - Create new appointment
+- `PUT /api/appointments/{id}` - Update appointment status
+- `GET /api/appointments/my` - Get user's appointments
+
+### Agriculture Endpoints
+- `GET /api/agriculture/farmers` - List all farmers
+- `POST /api/agriculture/farmers` - Register new farmer
+- `PUT /api/agriculture/farmers/{id}` - Update farmer
+- `DELETE /api/agriculture/farmers/{id}` - Delete farmer
+
+### System Endpoints
+- `GET /api/dashboard/metrics` - Dashboard metrics
+- `GET /api/alerts` - System alerts
+- `POST /api/alerts` - Create alert (admin only)
+- `DELETE /api/alerts/{id}` - Delete alert (admin only)
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/users` - Create new user (admin only)
+- `PUT /api/admin/users/{id}` - Update user (admin only)
+- `DELETE /api/admin/users/{id}` - Delete user (admin only)
 
 ---
 
@@ -541,10 +344,15 @@ GovConnect/
 | Issue | Solution |
 |-------|----------|
 | `Module not found` | Run `npm install` (frontend) or `pip install -r requirements.txt` (backend) |
-| `Port already in use` | Change port in `app.py` or Vite config |
-| `CORS errors` | Verify `CORS_ORIGINS` in backend `.env` |
-| `JWT token invalid` | Clear cookies and re-login |
-| `Redis connection failed` | Ensure Redis runs on localhost:6379 |
+| `Port already in use` | Change `PORT` in backend config or Vite config |
+| `CORS errors` | Verify `CORS_ORIGINS` in backend `.env` matches frontend URL |
+| `Database connection failed` | Check MySQL credentials and ensure database exists |
+| `Redis connection failed` | Ensure Redis server is running on localhost:6379 |
+| `JWT token invalid` | Clear browser cookies and re-login |
+| `Build fails` | Clear node_modules (`rm -rf node_modules && npm install`) |
+| `bcrypt import error` | Install additional packages: `pip install bcrypt` (Linux) or `pip install bcrypt[py36]` |
+| `MySQL connection error` | Ensure MySQL service is running: `sudo systemctl start mysql` |
+| `Permission denied` | Check file permissions and run with appropriate user privileges |
 
 ---
 
