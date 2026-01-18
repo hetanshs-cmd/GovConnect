@@ -283,7 +283,8 @@ def login():
                 'id': user.id,
                 'username': user.username,
                 'fullName': user.full_name,
-                'email': user.email
+                'email': user.email,
+                'role': user.role
             }
         }), 200)
 
@@ -410,7 +411,8 @@ def verify():
                 'id': user.id,
                 'username': user.username,
                 'fullName': user.full_name,
-                'email': user.email
+                'email': user.email,
+                'role': user.role
             }
         }), 200
 
@@ -2123,6 +2125,122 @@ def delete_dynamic_table_data(user, table_name, record_id):
         logging.error(f"Error deleting data: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+@app.route('/admin/dynamic/tables/<table_name>', methods=['DELETE'])
+@require_auth
+def delete_dynamic_table(user, table_name):
+    """Delete an entire dynamic table"""
+    try:
+        # Only super_admin can delete tables
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        from dynamicDatabase import delete_dynamic_table
+        delete_dynamic_table(table_name)
+        
+        return jsonify({
+            'message': f'Dynamic table "{table_name}" deleted successfully'
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error deleting table: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/admin/dynamic/tables/<table_name>/fields/<field_name>', methods=['DELETE'])
+@require_auth
+def delete_dynamic_field(user, table_name, field_name):
+    """Delete a field from a dynamic table"""
+    try:
+        # Only super_admin can delete fields
+        if user.role != 'super_admin':
+            return jsonify({'error': 'Access denied. Super admin privileges required.'}), 403
+        
+        from dynamicDatabase import delete_dynamic_field
+        delete_dynamic_field(table_name, field_name)
+        
+        return jsonify({
+            'message': f'Field "{field_name}" deleted from table "{table_name}" successfully'
+        }), 200
+    
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        logging.error(f"Error deleting field: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+# Dashboard Field Management (using makeSections.py functionality)
+dashboard_configs = []
+
+@app.route('/api/fields', methods=['POST'])
+@require_auth
+def add_dashboard_field(user):
+    """Add a new dashboard field configuration"""
+    try:
+        # Only admin and super_admin can add dashboard fields
+        if user.role not in ['admin', 'super_admin']:
+            return jsonify({'error': 'Access denied. Admin privileges required.'}), 403
+        
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Request body is required'}), 400
+        
+        # Create dynamic table for the field
+        table_name = f"dashboard_{data.get('fieldName', 'field').lower().replace(' ', '_')}_{int(time.time())}"
+        
+        # Convert inputs to fields format
+        fields = []
+        data_types = []
+        show_ui = []
+        
+        for input_item in data.get('inputs', []):
+            fields.append(input_item.get('label', 'field'))
+            # Map input types to database types
+            input_type = input_item.get('type', 'text')
+            if input_type == 'number':
+                data_types.append('int')
+            elif input_type == 'boolean':
+                data_types.append('bool')
+            else:
+                data_types.append('string')
+            show_ui.append(True)
+        
+        if fields:
+            # Create the dynamic table
+            create_dynamic_database(table_name, fields, data_types, show_ui)
+        
+        # Store configuration
+        new_field = {
+            "id": len(dashboard_configs) + 1,
+            "name": data.get('fieldName'),
+            "category": data.get('fieldType'),
+            "db_strategy": data.get('dbType'),
+            "schema": data.get('inputs'),
+            "table_name": table_name,
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        dashboard_configs.append(new_field)
+        
+        return jsonify({
+            "message": "Dashboard field added successfully!",
+            "data": new_field
+        }), 201
+    
+    except Exception as e:
+        logging.error(f"Error adding dashboard field: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/api/fields', methods=['GET'])
+@require_auth
+def get_dashboard_fields(user):
+    """Get all dashboard field configurations"""
+    try:
+        return jsonify({"fields": dashboard_configs}), 200
+    except Exception as e:
+        logging.error(f"Error getting dashboard fields: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
 # Full Page Management Endpoints (Super Admin Only)
 @app.route('/admin/pages', methods=['POST'])
 @require_auth
@@ -2157,6 +2275,7 @@ def create_page(user):
             route=data['route'].strip(),
             icon=data.get('icon', 'FileText').strip(),
             is_active=data.get('isActive', True),
+            is_main_tab=data.get('isMainTab', False),  # Add main tab field
             is_builtin=False,  # User-created pages are not built-in
             created_by=user.id
         )
@@ -2252,6 +2371,8 @@ def update_page(user, page_id):
             page.icon = data.get('icon', 'FileText').strip()
         if 'isActive' in data:
             page.is_active = data['isActive']
+        if 'isMainTab' in data:
+            page.is_main_tab = data['isMainTab']
 
         db.session.commit()
 
@@ -2658,6 +2779,14 @@ if __name__ == '__main__':
     print("GET /admin/dynamic/tables/<table_name>/metadata")
     print("POST /admin/dynamic/tables/<table_name>/data")
     print("GET /admin/dynamic/tables/<table_name>/data")
+    print("PUT /admin/dynamic/tables/<table_name>/data/<record_id>")
+    print("DELETE /admin/dynamic/tables/<table_name>/data/<record_id>")
+    print("DELETE /admin/dynamic/tables/<table_name>")
+    print("DELETE /admin/dynamic/tables/<table_name>/fields/<field_name>")
+    
+    # Dashboard Field Management Endpoints (Admin/Super Admin Only)
+    print("POST /api/fields")
+    print("GET /api/fields")
     
     # Full Page Management Endpoints (Super Admin Only)
     print("POST /admin/pages")

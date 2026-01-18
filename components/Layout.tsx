@@ -10,29 +10,68 @@ import SystemHealthPage from '../pages/SystemHealthPage';
 import AdminPage from '../pages/AdminPage';
 import HospitalRegistrationPage from '../pages/HospitalRegistrationPage';
 import FarmerRegistrationPage from '../pages/FarmerRegistrationPage';
+import CustomDashboardPage from '../pages/CustomDashboardPage';
 import Settings from './Settings';
 import ChatBox from './ChatBox';
 import DynamicSectionPage from './DynamicSectionPage';
+import MainNavigationTabPage from './MainNavigationTabPage';
 
 interface LayoutProps {
   isDark: boolean;
   setIsDark: (dark: boolean) => void;
   onLogout?: () => void;
-  user?: { username: string } | null;
+  user?: { username: string; role: string } | null;
 }
 
 const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [dynamicSections, setDynamicSections] = useState<any[]>([]);
+  const [pages, setPages] = useState<any[]>([]);
 
   // Load dynamic sections
   useEffect(() => {
-    const saved = localStorage.getItem('dynamic_full_sections');
-    if (saved) {
-      setDynamicSections(JSON.parse(saved));
-    }
+    const loadSections = () => {
+      const saved = localStorage.getItem('dynamic_full_sections');
+      if (saved) {
+        setDynamicSections(JSON.parse(saved));
+      }
+    };
+
+    loadSections();
+
+    // Listen for section updates
+    const handleSectionsUpdate = () => {
+      loadSections();
+    };
+
+    window.addEventListener('sectionsUpdated', handleSectionsUpdate);
+
+    return () => {
+      window.removeEventListener('sectionsUpdated', handleSectionsUpdate);
+    };
   }, []);
+
+  // Load pages
+  useEffect(() => {
+    const loadPages = async () => {
+      try {
+        const response = await fetch('/api/admin/pages', {
+          credentials: 'include',
+        });
+        if (response.ok) {
+          const pagesData = await response.json();
+          setPages(pagesData);
+        }
+      } catch (error) {
+        console.error('Failed to load pages:', error);
+      }
+    };
+
+    if (user?.role === 'admin' || user?.role === 'super_admin') {
+      loadPages();
+    }
+  }, [user]);
 
   // Handle window resize for mobile responsiveness
   useEffect(() => {
@@ -70,6 +109,7 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
         onMobileClose={handleMobileClose}
         user={user}
         dynamicSections={dynamicSections}
+        pages={pages}
       />
 
       <div className={`flex-1 flex flex-col ${!isMobile ? (sidebarOpen ? 'ml-64' : 'ml-16') : 'ml-0'}`}>
@@ -86,11 +126,12 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
         <main className="flex-1 p-4">
           <div className="max-w-6xl mx-auto">
             <Routes>
-              <Route path="/" element={<HomePage isDark={isDark} />} />
+              <Route path="/" element={<HomePage isDark={isDark} user={user} />} />
               <Route path="/healthcare" element={<HealthcarePage isDark={isDark} user={user} />} />
               <Route path="/agriculture" element={<AgriculturePage isDark={isDark} user={user} />} />
               <Route path="/alerts" element={<AlertsPage isDark={isDark} />} />
               <Route path="/system-health" element={<SystemHealthPage isDark={isDark} />} />
+              <Route path="/custom-dashboard" element={<CustomDashboardPage isDark={isDark} user={user} />} />
               <Route path="/admin" element={<AdminPage isDark={isDark} user={user} />} />
               <Route path="/hospital-registration" element={<HospitalRegistrationPage isDark={isDark} user={user} />} />
               <Route path="/farmer-registration" element={<FarmerRegistrationPage isDark={isDark} user={user} />} />
@@ -101,6 +142,20 @@ const Layout: React.FC<LayoutProps> = ({ isDark, setIsDark, onLogout, user }) =>
                   key={section.id}
                   path={section.path}
                   element={<DynamicSectionPage isDark={isDark} sectionData={section} />}
+                />
+              ))}
+              {/* Dynamic Pages */}
+              {pages.map((page) => (
+                <Route
+                  key={page.id}
+                  path={page.route}
+                  element={
+                    page.isMainTab ? (
+                      <MainNavigationTabPage isDark={isDark} user={user} />
+                    ) : (
+                      <DynamicPage isDark={isDark} user={user} />
+                    )
+                  }
                 />
               ))}
               <Route path="*" element={<Navigate to="/" replace />} />

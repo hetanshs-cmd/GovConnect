@@ -18,7 +18,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isDark }) => {
 	const [messages, setMessages] = useState<Message[]>([
 		{
 			id: '1',
-			text: 'Hello! I\'m GovConnect Assistant, your AI helper for government services. How can I assist you today?',
+			text: 'Hey there! 👋 I\'m GovConnect Assistant, your friendly guide to government services. I\'m here to help with healthcare, agriculture, and urban services. What can I help you with today?',
 			sender: 'bot',
 			timestamp: new Date(),
 			status: 'sent'
@@ -197,7 +197,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isDark }) => {
 						: 'bg-white/95 border border-gray-200/50 shadow-gray-900/10'
 						} backdrop-filter`}
 					style={{
-						bottom: '88px',
+						bottom: '100px',
 						right: '24px',
 						width: `${dimensions.width}px`,
 						height: `${dimensions.height}px`,
@@ -362,7 +362,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isDark }) => {
 									value={inputMessage}
 									onChange={(e) => setInputMessage(e.target.value)}
 									onKeyPress={handleKeyPress}
-									placeholder="Ask me about government services..."
+									placeholder="What's on your mind? Ask me anything! 💬"
 									className={`w-full px-4 py-3 pr-12 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${isDark
 										? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400 focus:bg-gray-600'
 										: 'bg-white border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-gray-50'
@@ -398,7 +398,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ isDark }) => {
 
 						{/* Quick Suggestions */}
 						<div className="flex flex-wrap gap-2 mt-3">
-							{["Book appointment", "Farmer registration", "Report complaint"].map((suggestion) => (
+							{["I need to book a doctor appointment", "How do I register as a farmer?", "I want to report an issue"].map((suggestion) => (
 								<button
 									key={suggestion}
 									onClick={() => setInputMessage(suggestion)}

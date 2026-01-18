@@ -41,7 +41,7 @@ conversation_history: Dict[str, List[Dict[str, str]]] = {}
 # =========================
 
 GOVCONNECT_CONTEXT = """
-You are GovConnect Assistant, an AI-powered helper for India's National Digital Public Services Platform.
+You are GovConnect Assistant, a friendly and helpful AI helper for India's National Digital Public Services Platform, like a knowledgeable friend on a phone call.
 
 SERVICES AVAILABLE:
 1. HEALTHCARE SERVICES:
@@ -69,14 +69,16 @@ SERVICES AVAILABLE:
    - User role management (Super Admin, Healthcare Admin, Agriculture Admin)
    - API health monitoring and system status
 
-RESPONSE GUIDELINES:
-- Be helpful, professional, and concise
-- Provide specific guidance on how to access services
-- Direct users to appropriate sections of the platform
-- Do not give medical diagnoses or legal advice
-- Encourage use of official government services
-- If unsure, ask for clarification
-- Keep responses under 150 words
+RESPONSE STYLE:
+- Be friendly, conversational, and approachable, like talking to a helpful friend on the phone
+- Use natural language: "Sure thing!", "I'd be happy to help!", "Let me guide you through that"
+- Ask follow-up questions to better assist users
+- Show enthusiasm and willingness to help
+- Keep responses conversational but informative
+- Use contractions and friendly phrases
+- If something is unclear, ask for clarification in a friendly way
+- End responses with offers for more help when appropriate
+- Politely decline topics outside government services scope and redirect to relevant help
 """
 
 # =========================
@@ -196,60 +198,120 @@ def _call_llm_api(user_message: str, user_id: str, model_type: str) -> Optional[
         print(f"Error calling {model_type} model: {e}")
         return None
 
-def get_enhanced_rule_response(user_message: str, user_id: str = "default") -> str:
-    """Enhanced rule-based responses with context awareness"""
+def is_out_of_scope(user_message: str) -> bool:
+    """Check if the query is completely outside GovConnect's scope"""
     user_msg = user_message.lower()
+
+    # Keywords that indicate out-of-scope topics
+    out_of_scope_keywords = [
+        # Entertainment & Media
+        "movie", "film", "music", "song", "game", "gaming", "entertainment", "netflix", "youtube", "social media",
+        # Shopping & Commerce (non-government)
+        "shopping", "buy", "purchase", "store", "market", "ecommerce", "amazon", "flipkart",
+        # Personal Finance (non-government)
+        "bank", "loan", "credit card", "investment", "stock", "crypto", "bitcoin", "trading",
+        # Travel & Transportation (non-government)
+        "flight", "hotel", "booking", "travel", "vacation", "taxi", "uber", "ola",
+        # Education (non-government)
+        "school", "college", "university", "exam", "study", "course", "online learning",
+        # Technology (general, non-government)
+        "computer", "phone", "mobile", "laptop", "software", "programming", "coding",
+        # Food & Dining
+        "restaurant", "food", "recipe", "cooking", "dining",
+        # Sports & Recreation
+        "sports", "football", "cricket", "tennis", "gym", "fitness",
+        # Personal Services
+        "beauty", "salon", "spa", "laundry", "cleaning",
+        # Real Estate (non-government)
+        "property", "house", "apartment", "rent", "real estate",
+        # Legal (non-government)
+        "lawyer", "court", "legal", "divorce", "marriage",
+        # Weather (general, not agriculture-specific)
+        "weather"  # Note: weather is handled in agriculture context
+    ]
+
+    # Check for out-of-scope keywords
+    for keyword in out_of_scope_keywords:
+        if keyword in user_msg:
+            return True
+
+    # Check for questions about unrelated topics
+    unrelated_patterns = [
+        "what is", "how does", "explain", "tell me about", "who is",
+        "when was", "where is", "why does", "how much", "how many"
+    ]
+
+    # If it contains question words and no government-related keywords, likely out of scope
+    question_words = ["what", "how", "why", "when", "where", "who", "which", "can you"]
+    gov_keywords = ["health", "medical", "hospital", "doctor", "farm", "agriculture", "farmer", "crop",
+                   "urban", "civic", "complaint", "infrastructure", "admin", "system", "api", "government", "gov"]
+
+    has_question = any(word in user_msg for word in question_words)
+    has_gov_topic = any(word in user_msg for word in gov_keywords)
+
+    if has_question and not has_gov_topic:
+        return True
+
+    return False
+
+def get_enhanced_rule_response(user_message: str, user_id: str = "default") -> str:
+    """Enhanced rule-based responses with context awareness - conversational like a phone assistant"""
+    user_msg = user_message.lower()
+
+    # Check if query is out of scope first
+    if is_out_of_scope(user_message):
+        return "I'm sorry, but I'm specifically designed to help with government services through GovConnect. I can assist with healthcare appointments, agriculture services, urban complaints, and system administration. For other topics, you might want to check with specialized services or search engines. Is there anything government-related I can help you with instead?"
 
     # Healthcare queries
     if any(word in user_msg for word in ["healthcare", "doctor", "appointment", "medical", "hospital", "health"]):
         if "appointment" in user_msg:
-            return "To book a doctor appointment, go to the Healthcare section and click 'Book Appointment'. Select your preferred hospital, doctor, and time slot. You'll receive a confirmation once booked."
+            return "Hey there! Booking a doctor appointment is super easy. Just head over to the Healthcare section and click 'Book Appointment'. Pick your hospital, choose a doctor, and select a time that works for you. You'll get a confirmation right away. Need help with anything else?"
         elif "hospital" in user_msg:
-            return "You can find registered hospitals in the Healthcare section. Super admins and healthcare admins can register new hospitals. Use the search feature to find hospitals by location or specialty."
+            return "Looking for hospitals? You can find all the registered ones in the Healthcare section. If you're an admin, you can even add new hospitals. Try using the search to find ones near you or by specialty. What kind of hospital are you looking for?"
         else:
-            return "For healthcare services, visit the Healthcare page to book appointments, access health information, or register hospitals. I can help guide you through the process!"
+            return "I'd be happy to help with healthcare stuff! Check out the Healthcare page for booking appointments, getting health info, or registering hospitals. I'm here if you need me to walk you through it!"
 
     # Agriculture queries
     elif any(word in user_msg for word in ["agriculture", "farm", "farmer", "crop", "irrigation", "weather"]):
         if "register" in user_msg or "farmer" in user_msg:
-            return "To register as a farmer, go to the Agriculture section and fill out the farmer registration form with your details, farm location, and crop information."
+            return "Great! Want to register as a farmer? Go to the Agriculture section and fill out the registration form with your details, farm location, and what crops you grow. It's quick and easy! Let me know if you need help with the form."
         elif "weather" in user_msg or "forecast" in user_msg:
-            return "Weather forecasts are available in the Agriculture section. Check the weather widget for current conditions, forecasts, and pest risk alerts for your crops."
+            return "Weather info is super important for farming! Check out the Agriculture section for current conditions, forecasts, and even pest alerts. It'll help you plan your day better. What crops are you growing?"
         elif "crop" in user_msg:
-            return "Crop monitoring and yield prediction tools are available in the Agriculture dashboard. Register your farm first to access personalized crop analytics."
+            return "Crop monitoring tools are awesome! Once you register your farm in the Agriculture dashboard, you can get personalized yield predictions and monitoring. It's like having a farming assistant. Want me to guide you through registration?"
         else:
-            return "The Agriculture section offers farmer registration, weather forecasts, crop monitoring, and irrigation management. How can I help you with agricultural services?"
+            return "Agriculture services are fantastic here! We've got farmer registration, weather forecasts, crop monitoring, and irrigation help. What farming question can I help you with today?"
 
     # Urban services queries
     elif any(word in user_msg for word in ["urban", "civic", "complaint", "roads", "water", "electricity", "infrastructure"]):
         if "complaint" in user_msg or "report" in user_msg:
-            return "To report civic issues, use the Urban Services section. Submit complaints about roads, water, electricity, or other infrastructure problems. Track your complaint status in real-time."
+            return "Got a civic issue? No problem! Use the Urban Services section to report problems with roads, water, electricity, or anything else. You can track your complaint status too. What issue are you dealing with?"
         else:
-            return "Urban services include complaint reporting and infrastructure monitoring. Visit the Urban Services page to report issues or check system status."
+            return "Urban services are all about keeping our cities running smoothly! You can report issues and check infrastructure status. Head to the Urban Services page - I'm here if you need help navigating it."
 
     # Admin queries
     elif any(word in user_msg for word in ["admin", "manage", "create", "delete", "update"]):
         if "alert" in user_msg:
-            return "Super admins can create and manage system alerts in the Alerts section. Use alerts to notify users about important updates, maintenance, or emergency information."
+            return "As a super admin, you can create system alerts to keep everyone informed! Check out the Alerts section for that. It's great for important announcements. What kind of alert are you thinking of?"
         elif "hospital" in user_msg:
-            return "Healthcare admins can register new hospitals through the Healthcare section. Provide hospital details, location, specialties, and contact information."
+            return "Healthcare admins can add new hospitals easily! Just go to the Healthcare section and provide the hospital details. Location, specialties, contact info - we've got it covered. Need help with the registration process?"
         else:
-            return "Admin features include user management, hospital registration, alert creation, and dynamic database management. Login with appropriate admin credentials to access these features."
+            return "Admin features give you lots of power! User management, hospital registration, alerts, database stuff - it's all there. Make sure you're logged in with the right admin credentials. What admin task are you working on?"
 
     # System queries
     elif any(word in user_msg for word in ["status", "health", "monitor", "api"]):
-        return "System health and API status can be monitored in the System Health page. Check real-time metrics, database connectivity, and service availability."
+        return "Want to check how everything's running? The System Health page shows real-time metrics, database status, and API health. It's like a dashboard for the whole system. Everything looking good there?"
 
     # General assistance
     elif any(word in user_msg for word in ["help", "how", "what", "guide"]):
-        return "I can help you with healthcare appointments, agriculture services, urban complaints, and system navigation. Try asking about 'book appointment', 'farmer registration', or 'report complaint' for specific guidance."
+        return "I'm your friendly helper! I can guide you through healthcare appointments, agriculture services, urban complaints, and using the platform. Try asking me about 'booking an appointment', 'farmer registration', or 'reporting a complaint'. What's on your mind?"
 
     # Greeting responses
     elif any(word in user_msg for word in ["hello", "hi", "hey", "good"]):
-        return "Hello! I'm GovConnect Assistant, here to help you with government services. I can assist with healthcare, agriculture, and urban services. What would you like to know?"
+        return "Hey there! 👋 I'm GovConnect Assistant, your friendly guide to government services. I help with healthcare, agriculture, and urban services. What can I help you with today?"
 
     # Default response
     else:
-        return "I'm here to help with GovConnect services including healthcare, agriculture, and urban services. Could you please specify what you need assistance with? For example, 'book appointment', 'farmer registration', or 'report complaint'."
+        return "Hi! I'm here to help with all things GovConnect - healthcare, agriculture, and urban services. Could you tell me a bit more about what you need? For example, are you looking to book an appointment, register as a farmer, or report an issue?"
 
 

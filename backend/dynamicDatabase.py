@@ -189,6 +189,55 @@ def delete_dynamic_data(table_name: str, record_id: int):
         raise ValueError(f"Record with id {record_id} not found in table {table_name}")
 
 
+# ================= DELETE FIELD =================
+def delete_dynamic_field(table_name: str, field_name: str):
+    if not is_valid_identifier(table_name):
+        raise ValueError("Invalid table name")
+
+    if not is_valid_identifier(field_name):
+        raise ValueError("Invalid field name")
+
+    try:
+        # Remove field from metadata
+        cursor.execute("""
+            DELETE FROM dynamic_table_meta
+            WHERE table_name = %s AND field_name = %s
+        """, (table_name, field_name))
+
+        # Drop column from table
+        sql = f"ALTER TABLE `{table_name}` DROP COLUMN `{field_name}`"
+        cursor.execute(sql)
+
+        connector.commit()
+
+    except Exception as e:
+        connector.rollback()
+        raise e
+
+
+# ================= DELETE TABLE =================
+def delete_dynamic_table(table_name: str):
+    if not is_valid_identifier(table_name):
+        raise ValueError("Invalid table name")
+
+    try:
+        # Remove metadata entries
+        cursor.execute("""
+            DELETE FROM dynamic_table_meta
+            WHERE table_name = %s
+        """, (table_name,))
+
+        # Drop the table
+        sql = f"DROP TABLE IF EXISTS `{table_name}`"
+        cursor.execute(sql)
+
+        connector.commit()
+
+    except Exception as e:
+        connector.rollback()
+        raise e
+
+
 # ================= EXAMPLE USAGE =================
 if __name__ == "__main__":
     setup_metadata_table()

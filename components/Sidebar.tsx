@@ -30,9 +30,10 @@ interface SidebarProps {
   onMobileClose?: () => void;
   user?: any;
   dynamicSections?: any[];
+  pages?: any[];
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose, user, dynamicSections }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, onMobileClose, user, dynamicSections, pages }) => {
   const location = useLocation();
 
   // Icon mapping for dynamic sections
@@ -60,6 +61,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
     { id: 'system-health', path: '/system-health', icon: Activity, label: 'System Health' },
   ];
 
+  // Add custom dashboard for super admin only
+  if (user && user.role === 'super_admin') {
+    menuItems.splice(5, 0, { id: 'custom-dashboard', path: '/custom-dashboard', icon: LayoutDashboard, label: 'Custom Dashboard' });
+  }
+
   // Add hospital registration for healthcare admin, admin, and super admin only
   if (user && (user.role === 'healthcare_admin' || user.role === 'admin' || user.role === 'super_admin')) {
     menuItems.splice(2, 0, { id: 'hospital-registration', path: '/hospital-registration', icon: Building2, label: 'Register Hospital' });
@@ -73,15 +79,41 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, isMobile, isDark, 
   // Add dynamic sections
   if (dynamicSections && dynamicSections.length > 0) {
     dynamicSections.forEach((section, index) => {
-      if (section.type === 'full_section') {
-        const DynamicIcon = iconMap[section.icon] || Building2; // Default to Building2 if no icon or invalid
-        menuItems.splice(4 + index, 0, {
-          id: `dynamic-${section.id}`,
-          path: `/dynamic/${section.id}`,
-          icon: DynamicIcon,
-          label: section.name
-        });
-      }
+      const DynamicIcon = iconMap[section.icon] || Building2; // Default to Building2 if no icon or invalid
+      menuItems.splice(4 + index, 0, {
+        id: `dynamic-${section.id}`,
+        path: section.path,
+        icon: DynamicIcon,
+        label: section.title
+      });
+    });
+  }
+
+  // Add dynamic pages as main navigation tabs (for superadmin only)
+  if (pages && pages.length > 0) {
+    const mainTabPages = pages.filter(page => page.isMainTab && user && user.role === 'super_admin');
+    const sidebarPages = pages.filter(page => !page.isMainTab);
+
+    // Add main navigation tabs after system health
+    mainTabPages.forEach((page) => {
+      const PageIcon = iconMap[page.icon] || FileText;
+      menuItems.splice(5, 0, {
+        id: `page-${page.id}`,
+        path: page.route,
+        icon: PageIcon,
+        label: page.title
+      });
+    });
+
+    // Add sidebar pages at the end
+    sidebarPages.forEach((page) => {
+      const PageIcon = iconMap[page.icon] || FileText;
+      menuItems.push({
+        id: `page-${page.id}`,
+        path: page.route,
+        icon: PageIcon,
+        label: page.title
+      });
     });
   }
 

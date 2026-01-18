@@ -366,6 +366,7 @@ class Page(db.Model):
     icon = db.Column(db.String(50), default='FileText')
     is_active = db.Column(db.Boolean, default=True)
     is_builtin = db.Column(db.Boolean, default=False)  # Built-in pages cannot be deleted
+    is_main_tab = db.Column(db.Boolean, default=False)  # Whether this appears as a main navigation tab
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -382,6 +383,7 @@ class Page(db.Model):
             'icon': self.icon,
             'isActive': self.is_active,
             'isBuiltin': self.is_builtin,
+            'isMainTab': self.is_main_tab,
             'createdBy': self.created_by,
             'createdAt': self.created_at.isoformat() if self.created_at else None,
             'updatedAt': self.updated_at.isoformat() if self.updated_at else None

@@ -10,6 +10,14 @@ Advanced Flask-based backend API for GovConnect dashboard with enterprise-grade 
 - Token-based session management (24-hour expiration)
 - Secure user data storage
 
+### � Email Notification System
+- Automated welcome emails for new user registrations
+- Appointment scheduling confirmations
+- Appointment status update notifications (confirmed, cancelled, completed)
+- Professional HTML email templates with GovConnect branding
+- Gmail SMTP integration with TLS encryption
+- Error-resilient email sending (failures don't break core functionality)
+
 ### 🛡️ Rate Limiting
 - Redis-based rate limiting (100 requests per 60 seconds per user)
 - IP-based and user-based throttling
@@ -24,6 +32,7 @@ Advanced Flask-based backend API for GovConnect dashboard with enterprise-grade 
   - Metrics collection
   - Appointment booking
   - Alert processing
+  - Email notifications
 
 ### 📊 Dashboard Integration
 - Real-time metrics endpoints
@@ -33,6 +42,7 @@ Advanced Flask-based backend API for GovConnect dashboard with enterprise-grade 
 ## Tech Stack
 
 - **Flask** - Web framework
+- **Flask-Mail** - Email notification system
 - **Redis** - Caching and queue management
 - **bcrypt** - Password hashing
 - **PyJWT** - JSON Web Tokens
@@ -45,17 +55,25 @@ Advanced Flask-based backend API for GovConnect dashboard with enterprise-grade 
    pip install -r requirements.txt
    ```
 
-2. **Start Redis Server** (if not already running)
+2. **Configure Email Settings** (optional, for email notifications)
+   ```bash
+   # Update config.py with your Gmail credentials
+   MAIL_USERNAME="your-email@gmail.com"
+   MAIL_PASSWORD="your-app-password"
+   MAIL_DEFAULT_SENDER="your-email@gmail.com"
+   ```
+
+3. **Start Redis Server** (if not already running)
    ```bash
    redis-server
    ```
 
-3. **Run the Flask Server**
+4. **Run the Flask Server**
    ```bash
    python app.py
    ```
 
-4. **Run Background Workers** (optional, in separate terminals)
+5. **Run Background Workers** (optional, in separate terminals)
    ```bash
    python worker.py
    ```
@@ -181,6 +199,27 @@ Authorization: Bearer <jwt_token>
 }
 ```
 
+### Email Notifications
+
+The system automatically sends email notifications for the following events:
+
+#### User Registration
+- **Trigger**: New user account creation
+- **Recipient**: New user
+- **Content**: Welcome message with platform overview and getting started guide
+
+#### Appointment Scheduling
+- **Trigger**: New appointment booking
+- **Recipient**: Patient
+- **Content**: Appointment confirmation with full details
+
+#### Appointment Status Updates
+- **Trigger**: Appointment status changes (confirmed, cancelled, completed)
+- **Recipient**: Patient
+- **Content**: Status update notification with relevant information
+
+**Note**: Email sending is asynchronous and failures don't affect core functionality.
+
 ### Dashboard
 
 #### GET `/api/dashboard/metrics`
@@ -211,7 +250,7 @@ Check if the service is running.
 {
   "status": "healthy",
   "service": "GovConnect Backend",
-  "features": ["authentication", "rate_limiting", "task_scheduling", "redis_cache"]
+  "features": ["authentication", "rate_limiting", "task_scheduling", "redis_cache", "email_notifications"]
 }
 ```
 
@@ -221,17 +260,19 @@ Check if the service is running.
 
 1. **app.py** - Main Flask application with API endpoints
 2. **config.py** - Configuration settings
-3. **redis_client.py** - Redis connection management
-4. **rate_limit.py** - Rate limiting functionality
-5. **scheduler.py** - Task scheduling system
-6. **worker.py** - Background worker process
-7. **worker_pool.py** - Task processing logic
+3. **email_utils.py** - Email notification system and templates
+4. **redis_client.py** - Redis connection management
+5. **rate_limit.py** - Rate limiting functionality
+6. **scheduler.py** - Task scheduling system
+7. **worker.py** - Background worker process
+8. **worker_pool.py** - Task processing logic
 
 ### Data Flow
 
 1. **Authentication**: User logs in → JWT token generated → Stored in Redis with rate limiting
 2. **Task Processing**: API receives task → Queued in Redis → Worker processes → Results stored
-3. **Rate Limiting**: Each request checked against Redis counters → Throttled if exceeded
+3. **Email Notifications**: User actions trigger → Email queued → Sent via SMTP → Delivery logged
+4. **Rate Limiting**: Each request checked against Redis counters → Throttled if exceeded
 
 ## Security Notes
 

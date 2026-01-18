@@ -2,10 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import KPICard from './KPICard';
 import AlertFeed from './AlertFeed';
-import { Users, Server, Map, Activity, Clock, AlertTriangle, Plus, X, Save } from 'lucide-react';
+import { Users, Server, Map, Activity, Clock, AlertTriangle, Plus, X, Save, LayoutDashboard, Trash2 } from 'lucide-react';
 
 interface DashboardProps {
   isDark?: boolean;
+  isCustom?: boolean;
+  customTitle?: string;
+  customDescription?: string;
+  pageId?: number;
+  user?: { username: string; role: string } | null;
 }
 
 interface DynamicSection {
@@ -17,6 +22,7 @@ interface DynamicSection {
     name: string;
     type: string;
     required: boolean;
+    show_ui?: boolean;
   }>;
   icon?: string;
   description?: string;
@@ -28,6 +34,7 @@ interface DynamicFormSectionProps {
     name: string;
     type: string;
     required: boolean;
+    show_ui?: boolean;
   }>;
   isDark: boolean;
 }
@@ -88,7 +95,7 @@ const DynamicFormSection: React.FC<DynamicFormSectionProps> = ({ tableName, fiel
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {fields.map((field) => (
+          {fields.filter(field => field.show_ui !== false).map((field) => (
             <div key={field.name}>
               <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {field.name} {field.required && <span className="text-red-500">*</span>}
@@ -170,17 +177,16 @@ const DynamicFormSection: React.FC<DynamicFormSectionProps> = ({ tableName, fiel
   );
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
+const Dashboard: React.FC<DashboardProps> = ({ isDark = true, isCustom = false, customTitle, customDescription, pageId, user }) => {
   const [showAddSection, setShowAddSection] = useState(false);
   const [dynamicSections, setDynamicSections] = useState<DynamicSection[]>([]);
-  const [user, setUser] = useState<any>(null);
   const [newSection, setNewSection] = useState({
     title: '',
     type: 'form' as 'form' | 'data' | 'chart' | 'full_section',
     table_name: '',
     icon: 'Database',
     description: '',
-    fields: [{ name: '', type: 'string', required: false }]
+    fields: [{ name: '', type: 'string', required: false, show_ui: true }]
   });
 
   // KPI Statistics State
@@ -194,25 +200,13 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
 
   // Load dynamic sections from localStorage (in a real app, this would come from an API)
   useEffect(() => {
-    const saved = localStorage.getItem('dynamic_sections');
+    const storageKey = pageId ? `page_${pageId}_sections` : (isCustom ? 'custom_dashboard_sections' : 'dynamic_sections');
+    const saved = localStorage.getItem(storageKey);
     if (saved) {
       setDynamicSections(JSON.parse(saved));
     }
     loadKPIStats();
-    loadUser();
-  }, []);
-
-  const loadUser = async () => {
-    try {
-      const response = await fetch('/api/auth/me', { credentials: 'include' });
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData.user);
-      }
-    } catch (error) {
-      console.error('Error loading user:', error);
-    }
-  };
+  }, [isCustom, pageId]);
 
   // Load KPI statistics from API
   const loadKPIStats = async () => {
@@ -252,14 +246,73 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
 
   // Save dynamic sections to localStorage
   const saveSections = (sections: DynamicSection[]) => {
-    localStorage.setItem('dynamic_sections', JSON.stringify(sections));
+    const storageKey = pageId ? `page_${pageId}_sections` : (isCustom ? 'custom_dashboard_sections' : 'dynamic_sections');
+    localStorage.setItem(storageKey, JSON.stringify(sections));
     setDynamicSections(sections);
+  };
+
+  // Delete section and associated database table (for superadmin only)
+  const deleteSection = async (section: DynamicSection) => {
+    if (user?.role !== 'super_admin') return;
+
+    // Confirm deletion
+    if (!confirm(`Are you sure you want to delete the "${section.title}" section? This will permanently delete all associated data.`)) {
+      return;
+    }
+
+    try {
+      // If it's a form section with a table, delete the database table
+      if (section.type === 'form' && section.table_name) {
+        const response = await fetch(`/api/admin/dynamic/tables/${section.table_name}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to delete database table:', section.table_name);
+        }
+
+        // Also try to delete associated service if it exists
+        try {
+          // First get all services to find the one with matching name
+          const servicesResponse = await fetch('/api/admin/services', {
+            credentials: 'include',
+          });
+
+          if (servicesResponse.ok) {
+            const services = await servicesResponse.json();
+            const serviceToDelete = services.find((s: any) => s.name === section.table_name);
+
+            if (serviceToDelete) {
+              const serviceDeleteResponse = await fetch(`/api/admin/services/${serviceToDelete.id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+              });
+              if (!serviceDeleteResponse.ok) {
+                console.warn('Failed to delete associated service');
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('Error deleting associated service:', err);
+        }
+      }
+
+      // Remove from localStorage
+      const updatedSections = dynamicSections.filter(s => s.id !== section.id);
+      saveSections(updatedSections);
+
+      console.log(`Section "${section.title}" deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting section:', error);
+      alert('Failed to delete section. Please try again.');
+    }
   };
 
   const addField = () => {
     setNewSection({
       ...newSection,
-      fields: [...newSection.fields, { name: '', type: 'string', required: false }]
+      fields: [...newSection.fields, { name: '', type: 'string', required: false, show_ui: true }]
     });
   };
 
@@ -295,7 +348,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
             table_name: tableName,
             fields: validFields.map(f => f.name),
             data_types: validFields.map(f => f.type),
-            show_ui: validFields.map(() => true)
+            show_ui: validFields.map(f => f.show_ui)
           })
         });
 
@@ -358,7 +411,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
             table_name: '',
             icon: 'Database',
             description: '',
-            fields: [{ name: '', type: 'string', required: false }]
+            fields: [{ name: '', type: 'string', required: false, show_ui: true }]
           });
           setShowAddSection(false);
         }
@@ -382,34 +435,50 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
         table_name: '',
         icon: 'Database',
         description: '',
-        fields: [{ name: '', type: 'string', required: false }]
+        fields: [{ name: '', type: 'string', required: false, show_ui: true }]
       });
       setShowAddSection(false);
     }
   };
 
   const removeSection = (id: string) => {
-    saveSections(dynamicSections.filter(s => s.id !== id));
+    const updatedSections = dynamicSections.filter(s => s.id !== id);
+    saveSections(updatedSections);
   };
   return (
     <div className="space-y-4">
       {/* Header with Add Section Button */}
-      <div className="flex justify-between items-center">
-        <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
-          Dashboard
-        </h2>
-        {user?.role === 'super_admin' && (
-          <button
-            onClick={() => setShowAddSection(true)}
-            className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${isDark
-              ? 'bg-blue-600 hover:bg-blue-700 text-white'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Section
-          </button>
-        )}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-black'}`}>
+            {customTitle || (isCustom ? 'Custom Dashboard' : 'Dashboard')}
+          </h2>
+          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            {customDescription || (isCustom ? 'Your personalized dashboard with custom sections' : 'System overview and management dashboard')}
+          </p>
+        </div>
+        {(() => {
+          console.log('User role check:', user?.role, 'isCustom:', isCustom);
+          // Only show Add Field/Section button to superadmin
+          const shouldShow = user?.role === 'super_admin';
+          return shouldShow && (
+            <div className="text-right">
+              <button
+                onClick={() => setShowAddSection(true)}
+                className={`flex items-center px-6 py-3 rounded-lg font-medium transition-colors border-2 ${isDark
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white border-blue-500'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400'
+                  }`}
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add Field/Section
+              </button>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                Add custom fields and sections to the dashboard (Super Admin Only)
+              </p>
+            </div>
+          );
+        })()}
       </div>
 
       {/* KPI Grid */}
@@ -429,13 +498,27 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
             <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
               {section.title}
             </h3>
-            <button
-              onClick={() => removeSection(section.id)}
-              className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
-                }`}
-            >
-              <X className="w-4 h-4" />
-            </button>
+            {/* Only show delete buttons for superadmin */}
+            {user?.role === 'super_admin' && (
+              <div className="flex gap-1">
+                <button
+                  onClick={() => removeSection(section.id)}
+                  className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-600'
+                    }`}
+                  title="Remove from view"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => deleteSection(section)}
+                  className={`p-1 rounded transition-colors ${isDark ? 'hover:bg-red-700 text-red-400' : 'hover:bg-red-100 text-red-600'
+                    }`}
+                  title="Permanently delete section and data"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
           </div>
 
           {section.type === 'form' && section.table_name && (
@@ -463,6 +546,54 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
           )}
         </div>
       ))}
+
+      {/* Custom Dashboard Management - Super Admin Only */}
+      {!isCustom && user?.role === 'super_admin' && (
+        <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-black'}`}>
+              Custom Dashboard Management
+            </h3>
+            <button
+              onClick={() => window.open('/custom-dashboard', '_blank')}
+              className={`flex items-center px-4 py-2 rounded-lg font-medium transition-colors ${isDark
+                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                : 'bg-purple-500 hover:bg-purple-600 text-white'
+                }`}
+            >
+              <LayoutDashboard className="w-4 h-4 mr-2" />
+              Open Custom Dashboard
+            </button>
+          </div>
+          <p className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'} mb-4`}>
+            Manage your custom dashboard with personalized sections, KPIs, and data visualizations.
+            The custom dashboard replicates all dashboard functionality with full customization capabilities.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.open('/custom-dashboard', '_blank')}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isDark
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+            >
+              Configure Dashboard
+            </button>
+            <button
+              onClick={() => {
+                const customSections = JSON.parse(localStorage.getItem('custom_dashboard_sections') || '[]');
+                alert(`Custom Dashboard has ${customSections.length} sections configured.`);
+              }}
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isDark
+                ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                : 'bg-gray-500 hover:bg-gray-600 text-white'
+                }`}
+            >
+              View Statistics
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Alert Feed */}
       <div className="w-full">
@@ -591,6 +722,14 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
                   </div>
 
                   <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {/* Field headers */}
+                    <div className="flex items-center space-x-2 text-xs font-medium text-gray-500 mb-1">
+                      <span className="flex-1">Field Name</span>
+                      <span className="w-20 text-center">Type</span>
+                      <span className="w-16 text-center">Required</span>
+                      <span className="w-16 text-center">Show UI</span>
+                      <span className="w-6"></span>
+                    </div>
                     {newSection.fields.map((field, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <input
@@ -606,7 +745,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
                         <select
                           value={field.type}
                           onChange={(e) => updateField(index, 'type', e.target.value)}
-                          className={`px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDark
+                          className={`w-20 px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDark
                             ? 'bg-gray-700 border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-black'
                             }`}
@@ -617,12 +756,24 @@ const Dashboard: React.FC<DashboardProps> = ({ isDark = true }) => {
                           <option value="bool">Yes/No</option>
                           <option value="date">Date</option>
                         </select>
-                        <input
-                          type="checkbox"
-                          checked={field.required}
-                          onChange={(e) => updateField(index, 'required', e.target.checked)}
-                          className="w-4 h-4"
-                        />
+                        <div className="w-16 flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={field.required}
+                            onChange={(e) => updateField(index, 'required', e.target.checked)}
+                            className="w-4 h-4"
+                            title="Required field"
+                          />
+                        </div>
+                        <div className="w-16 flex justify-center">
+                          <input
+                            type="checkbox"
+                            checked={field.show_ui}
+                            onChange={(e) => updateField(index, 'show_ui', e.target.checked)}
+                            className="w-4 h-4"
+                            title="Show on UI"
+                          />
+                        </div>
                         {newSection.fields.length > 1 && (
                           <button
                             onClick={() => removeField(index)}
